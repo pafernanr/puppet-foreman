@@ -89,6 +89,10 @@
 # @param request_headers_to_unset A list of HTTP headers coming from
 #   the client that will be unset and hence not passed to the
 #   application.
+# @param custom_foreman_includes A list of custom apache configurations to include
+#   Additional configuration to apache::vhost for the http vhost
+# @param custom_foreman_ssl_includes A list of custom apache configurations to include
+#   Additional configuration to apache::vhost for the https vhost
 class foreman::config::apache (
   Stdlib::Absolutepath $app_root = '/usr/share/foreman',
   String $priority = '05',
@@ -138,6 +142,8 @@ class foreman::config::apache (
     'REMOTE_USER-GROUPS',
     'REMOTE_USER_GROUPS',
   ],
+  Array[String] $custom_foreman_includes = [],
+  Array[String] $custom_foreman_ssl_includes = [],
 ) {
   $docroot = "${app_root}/public"
 
@@ -282,7 +288,7 @@ class foreman::config::apache (
     servername            => $servername,
     serveraliases         => $serveraliases,
     access_log_format     => $access_log_format,
-    additional_includes   => ["${apache::confd_dir}/${priority}-foreman.d/*.conf"],
+    additional_includes   => ["${apache::confd_dir}/${priority}-foreman.d/*.conf"] + $custom_foreman_includes,
     use_optional_includes => true,
     custom_fragment       => $custom_fragment,
     *                     => $vhost_http_internal_options + $http_vhost_options,
@@ -327,7 +333,7 @@ class foreman::config::apache (
       ssl_options           => '+StdEnvVars +ExportCertData',
       ssl_verify_depth      => 3,
       access_log_format     => $access_log_format,
-      additional_includes   => ["${apache::confd_dir}/${priority}-foreman-ssl.d/*.conf"],
+      additional_includes   => ["${apache::confd_dir}/${priority}-foreman-ssl.d/*.conf"] + $custom_foreman_ssl_includes,
       use_optional_includes => true,
       custom_fragment       => $custom_fragment,
       *                     => $vhost_https_internal_options + $https_vhost_options,
